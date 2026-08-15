@@ -30,6 +30,8 @@ test("server-renders the Become a Chef product shell", async () => {
   assert.match(html, /BECOME A CHEF/);
   assert.match(html, /Make something/);
   assert.match(html, /给我三道创作灵感/);
+  assert.match(html, /你现在有什么食材/);
+  assert.doesNotMatch(html, />食材台<|>备料清单</);
   assert.doesNotMatch(html, /Your site is taking shape|vinext-starter/);
 });
 

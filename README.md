@@ -2,7 +2,7 @@
 
 An AI-assisted cooking companion that turns the ingredients already at home into practical meal ideas. The product is designed around a common daily problem: deciding what to cook without buying a completely new set of groceries.
 
-**Current version:** `1.0.0`  
+**Current version:** `1.1.0`  
 **Live demo:** [jinwan-chisha.miaochuan89.chatgpt.site](https://jinwan-chisha.miaochuan89.chatgpt.site/)
 
 ## Product highlights
@@ -11,7 +11,8 @@ An AI-assisted cooking companion that turns the ingredients already at home into
 - Generates three recipes based on available time, serving count, and cooking goal.
 - Uses a primary and fallback AI model for more reliable recipe generation.
 - Clearly separates required ingredients from optional flavor upgrades.
-- Creates a shopping list only after the user commits to one dish.
+- Reveals an actionable shopping list directly below the selected dish.
+- Supports copying the list and moving purchased ingredients into the saved pantry.
 - Provides step-by-step cooking mode with practical substitutions and safety notes.
 - Saves the pantry locally in the browser; no account is required.
 - Falls back to a curated recipe library if the AI service is unavailable.
@@ -92,6 +93,12 @@ worker/                   Cloudflare Worker entry point
 - Basic per-IP request limiting protects the public endpoint.
 - Pantry preferences are stored only in the visitor's browser.
 - No passwords, personal profiles, or payment data are collected.
+
+## Version 1.1.0
+
+- Unified the pantry input, recipe choice, shopping list, and cooking steps into one page.
+- Removed duplicated pantry and empty preparation-list navigation.
+- Added list copying and one-click purchased-item synchronization.
 
 ## Version 1.0.0
 

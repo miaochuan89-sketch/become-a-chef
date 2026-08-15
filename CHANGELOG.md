@@ -2,6 +2,20 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.1.0 — 2026-08-15
+
+### Changed
+
+- Replaced the separate pantry and preparation-list pages with one continuous cooking flow.
+- Renamed pantry language to focus on ingredients the user already has.
+- Shows the shopping list immediately after a recipe is selected.
+
+### Added
+
+- Copyable, dish-specific shopping lists.
+- One-click action to mark required purchases as available ingredients.
+- Clearer empty and ready-to-cook states.
+
 ## 1.0.0 — 2026-08-15
 
 ### Added
