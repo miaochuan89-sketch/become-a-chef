@@ -2,6 +2,31 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.2.0 — 2026-08-15
+
+### Added
+
+- Account-free Chef's Table with one-photo dish posts.
+- Required publisher name and one-sentence caption.
+- Public likes and named comments.
+- Durable D1 metadata and R2 image storage.
+- Persistent bottom directory for Recipe Ideas and Chef's Table.
+
+### Changed
+
+- Removed the decorative `B` avatar and moved the main page destinations into the bottom directory.
+- Added transient retry handling across production AI models.
+- Replaced the generic busy error with three pantry-aware emergency recipes.
+- Removed the low-value serving-count selector.
+- Replaced arbitrary emergency combinations with ranked, established recipe pairings.
+- Limited production generation to Groq's production GPT-OSS models and honored provider retry timing.
+
+## 1.1.1 — 2026-08-15
+
+### Added
+
+- Subtle `Developed by Miaochuan` attribution linked to the developer's GitHub profile.
+
 ## 1.1.0 — 2026-08-15
 
 ### Changed

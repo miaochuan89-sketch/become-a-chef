@@ -32,6 +32,13 @@ test("server-renders the Become a Chef product shell", async () => {
   assert.match(html, /给我三道创作灵感/);
   assert.match(html, /你现在有什么食材/);
   assert.doesNotMatch(html, />食材台<|>备料清单</);
+  assert.doesNotMatch(html, /用餐人数/);
+  assert.match(html, /Developed by/);
+  assert.match(html, /miaochuan89-sketch/);
+  assert.match(html, /CHEF&#x27;S TABLE|CHEF'S TABLE/);
+  assert.match(html, /RECIPE IDEAS/);
+  assert.match(html, /页面目录/);
+  assert.doesNotMatch(html, /aria-label="品牌标记"/);
   assert.doesNotMatch(html, /Your site is taking shape|vinext-starter/);
 });
 
@@ -45,17 +52,43 @@ test("recipe API rejects an empty pantry", async () => {
   assert.deepEqual(await response.json(), { error: "请先添加至少一种食材。" });
 });
 
-test("recipe API does not expose credentials when AI is unconfigured", async () => {
+test("recipe API returns pantry-aware fallback without exposing credentials", async () => {
   const previousKey = process.env.GROQ_API_KEY;
   delete process.env.GROQ_API_KEY;
   try {
     const response = await request("/api/recommend", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ pantry: ["鸡蛋"], minutes: 15, people: 1 }),
+      body: JSON.stringify({ pantry: ["鸡蛋"], minutes: 15 }),
     });
-    assert.equal(response.status, 503);
-    assert.deepEqual(await response.json(), { error: "AI_NOT_CONFIGURED" });
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(data.source, "fallback");
+    assert.equal(data.reason, "ai_not_configured");
+    assert.equal(data.recipes.length, 3);
+    assert.ok(data.recipes[0].ingredients.some((item) => item.name === "鸡蛋"));
+    assert.doesNotMatch(JSON.stringify(data), /gsk_|GROQ_API_KEY/);
+  } finally {
+    if (previousKey) process.env.GROQ_API_KEY = previousKey;
+  }
+});
+
+test("fallback keeps incompatible pantry items out of the same dish", async () => {
+  const previousKey = process.env.GROQ_API_KEY;
+  delete process.env.GROQ_API_KEY;
+  try {
+    const response = await request("/api/recommend", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ pantry: ["香蕉", "鸡肉"], minutes: 30 }),
+    });
+    const data = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(data.recipes.length, 3);
+    assert.ok(data.recipes.every((recipe) => {
+      const names = recipe.ingredients.map((item) => item.name);
+      return !(names.includes("香蕉") && names.includes("鸡肉"));
+    }));
   } finally {
     if (previousKey) process.env.GROQ_API_KEY = previousKey;
   }
