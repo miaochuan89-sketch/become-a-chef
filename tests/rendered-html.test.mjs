@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 async function request(path = "/", init) {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -89,6 +90,30 @@ test("fallback keeps incompatible pantry items out of the same dish", async () =
       const names = recipe.ingredients.map((item) => item.name);
       return !(names.includes("香蕉") && names.includes("鸡肉"));
     }));
+  } finally {
+    if (previousKey) process.env.GROQ_API_KEY = previousKey;
+  }
+});
+
+test("portrait and landscape dish photos use uncropped rendering", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.photo-drop img\{object-fit:contain/);
+  assert.match(css, /\.dish-post>img\{aspect-ratio:auto;height:auto;max-height:560px;object-fit:contain/);
+});
+
+test("fallback keeps all chicken-only suggestions anchored to chicken", async () => {
+  const previousKey = process.env.GROQ_API_KEY;
+  delete process.env.GROQ_API_KEY;
+  try {
+    const response = await request("/api/recommend", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ pantry: ["鸡肉"], minutes: 30 }),
+    });
+    const data = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(data.recipes.length, 3);
+    assert.ok(data.recipes.every((recipe) => recipe.ingredients.some((item) => item.name.includes("鸡"))));
   } finally {
     if (previousKey) process.env.GROQ_API_KEY = previousKey;
   }

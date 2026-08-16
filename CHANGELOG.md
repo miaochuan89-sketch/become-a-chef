@@ -2,6 +2,18 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.2.1 — 2026-08-15
+
+### Fixed
+
+- Portrait dish photos now retain their complete composition in previews and community cards.
+- Implausible AI recipes are rejected before they reach the interface.
+
+### Improved
+
+- Lowered generation randomness and required familiar cooking templates with pantry relevance.
+- Expanded single-ingredient fallback options for common eggs, chicken, tofu, and fruit.
+
 ## 1.2.0 — 2026-08-15
 
 ### Added

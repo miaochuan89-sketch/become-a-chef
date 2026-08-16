@@ -129,11 +129,88 @@ export function buildPantryFallback(pantry: string[], minutes: number, goal: str
     },
   ];
 
+  if (findPantryItem(pantry, egg)) candidates.push(
+    {
+      name: "家常蒸水蛋", emoji: "🥚", time: 15, cost: 1.8, protein: 14,
+      description: "鸡蛋加温水蒸熟，口感柔嫩，配料保持简单。",
+      note: "蛋液和温水约为1:1.5，盖盘可减少表面气孔。",
+      ingredients: [ingredient(pantry, "鸡蛋", egg, "2个"), optional("温水", "约150毫升"), optional("酱油或香油")],
+      steps: ["鸡蛋打散，加入温水和少许盐搅匀。", "过滤蛋液并盖上盘子或耐热保鲜膜。", "水开后转中小火蒸约十分钟。", "中心凝固后关火，按喜好加少量酱油。"],
+      source: "fallback", matchGroups: [egg],
+    },
+    {
+      name: "清爽蛋花汤", emoji: "🍲", time: 10, cost: 1.5, protein: 13,
+      description: "用鸡蛋做主角的清汤，不强行加入味道不确定的食材。",
+      note: "汤微沸时缓慢淋蛋液，等数秒再推动。",
+      ingredients: [ingredient(pantry, "鸡蛋", egg, "2个"), optional("葱花"), optional("盐和香油")],
+      steps: ["锅中加两碗水并烧至微沸。", "鸡蛋充分打散。", "沿锅边缓慢淋入蛋液，稍等后轻推。", "加盐调味，关火后滴少量香油。"],
+      source: "fallback", matchGroups: [egg],
+    },
+  );
+
+  if (findPantryItem(pantry, chicken)) candidates.push(
+    {
+      name: "黑胡椒香煎鸡肉", emoji: "🍗", time: 20, cost: 5.5, protein: 38,
+      description: "鸡肉单独香煎，搭配黑胡椒就是稳定的主菜。",
+      note: "最厚处必须完全熟透，生熟夹子分开使用。",
+      ingredients: [ingredient(pantry, "鸡肉", chicken, "300克"), optional("黑胡椒"), optional("盐和食用油")],
+      steps: ["鸡肉擦干并切成厚度均匀的片。", "加盐和黑胡椒腌五分钟。", "平底锅少油，中火把两面煎至金黄。", "确认中心熟透后静置两分钟再切。"],
+      source: "fallback", matchGroups: [chicken],
+    },
+    {
+      name: "清炖鸡肉蔬菜汤", emoji: "🥣", time: 35, cost: 6, protein: 34,
+      description: "鸡肉清炖后再搭配一种常见蔬菜，味道干净可靠。",
+      note: "没有合适蔬菜时只炖鸡肉也可以，不必硬凑。",
+      ingredients: [ingredient(pantry, "鸡肉", chicken, "300克"), { name: chosenVegetable, amount: "200克", required: false }, optional("姜片")],
+      steps: ["鸡肉冷水下锅，煮开后撇去浮沫。", "加入姜片，小火炖二十分钟。", "有合适蔬菜时切块加入并煮熟。", "确认鸡肉熟透后加盐调味。"],
+      source: "fallback", matchGroups: [chicken],
+    },
+  );
+
+  if (findPantryItem(pantry, tofu)) candidates.push(
+    {
+      name: "家常香煎豆腐", emoji: "◻️", time: 18, cost: 3, protein: 20,
+      description: "豆腐煎至金黄后简单调味，做法直接且不挑配菜。",
+      note: "豆腐擦干再下锅，不要频繁翻动。",
+      ingredients: [ingredient(pantry, "豆腐", tofu, "1盒"), optional("酱油"), optional("葱花")],
+      steps: ["豆腐切厚片并擦干表面。", "平底锅少油，中火煎至一面定型。", "翻面继续煎至金黄。", "沿锅边加少量酱油和水，收汁后出锅。"],
+      source: "fallback", matchGroups: [tofu],
+    },
+    {
+      name: "清淡豆腐汤", emoji: "🥣", time: 15, cost: 2.8, protein: 18,
+      description: "豆腐做成清汤，适合作为简单而温和的一餐。",
+      note: "豆腐下锅后轻轻推动，避免煮碎。",
+      ingredients: [ingredient(pantry, "豆腐", tofu, "1盒"), optional("青菜", "一把"), optional("盐和白胡椒")],
+      steps: ["豆腐切成小块。", "锅中水烧开，轻轻放入豆腐。", "小火煮五分钟，有青菜时最后加入。", "用盐和白胡椒调味后关火。"],
+      source: "fallback", matchGroups: [tofu],
+    },
+  );
+
+  if (findPantryItem(pantry, fruit)) candidates.push(
+    {
+      name: "鲜果酸奶杯", emoji: "🍓", time: 5, cost: 3, protein: 10,
+      description: "水果只和酸奶组合，保持清爽的甜味逻辑。",
+      note: "只使用清洗干净、没有变质的水果。",
+      ingredients: [ingredient(pantry, "水果", fruit, "1份"), ingredient(pantry, "酸奶", dairy, "200克", false), optional("燕麦", "一小把")],
+      steps: ["水果洗净并沥干。", "把水果切成适口小块。", "酸奶倒入碗中。", "铺上水果，有燕麦时少量撒在表面。"],
+      source: "fallback", matchGroups: [fruit],
+    },
+    {
+      name: "温热肉桂水果", emoji: "🍎", time: 10, cost: 2.5, protein: 2,
+      description: "水果单独温热处理，不进入任何咸味肉菜。",
+      note: "香蕉等很软的水果无需久煮，苹果和梨更适合加热。",
+      ingredients: [ingredient(pantry, "水果", fruit, "1份"), optional("肉桂粉"), optional("蜂蜜")],
+      steps: ["水果洗净并切块。", "平底锅加一小勺水，小火放入水果。", "加热至稍微软化，不要煮烂。", "关火后按喜好加少量肉桂或蜂蜜。"],
+      source: "fallback", matchGroups: [fruit],
+    },
+  );
+
   return candidates
     .map((recipe) => {
       const matched = recipe.matchGroups.filter((group) => findPantryItem(pantry, group)).length;
       const missing = recipe.matchGroups.length - matched;
-      let score = matched * 14 - missing * 4 - Math.max(0, recipe.time - minutes);
+      let score = matched * 18 - missing * 8 - Math.max(0, recipe.time - minutes);
+      if (matched === 0) score -= 30;
       if (goal === "清空冰箱") score += matched * 5;
       if (goal === "高蛋白") score += recipe.protein / 5;
       return { recipe, score };

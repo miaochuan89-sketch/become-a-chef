@@ -2,7 +2,7 @@
 
 An AI-assisted cooking companion that turns the ingredients already at home into practical meal ideas. The product is designed around a common daily problem: deciding what to cook without buying a completely new set of groceries.
 
-**Current version:** `1.2.0`  
+**Current version:** `1.2.1`
 **Live demo:** [jinwan-chisha.miaochuan89.chatgpt.site](https://jinwan-chisha.miaochuan89.chatgpt.site/)
 
 ## Product highlights
@@ -14,6 +14,7 @@ An AI-assisted cooking companion that turns the ingredients already at home into
 - Reveals an actionable shopping list directly below the selected dish.
 - Supports copying the list and moving purchased ingredients into the saved pantry.
 - Includes an account-free Chef's Table for photo posts, likes, and named comments.
+- Preserves the full composition of both portrait and landscape dish photos.
 - Keeps Recipe Ideas and Chef's Table visible in a persistent two-tab page directory.
 - Provides step-by-step cooking mode with practical substitutions and safety notes.
 - Saves the pantry locally in the browser; no account is required.
@@ -24,8 +25,9 @@ An AI-assisted cooking companion that turns the ingredients already at home into
 1. The user adds ingredients to the pantry.
 2. The interface sends a sanitized request to the server-side recipe endpoint.
 3. The endpoint asks Groq-hosted production models for structured recipe data and follows provider retry timing for temporary failures.
-4. If every AI route is unavailable, the endpoint ranks established recipes by pantry match and never force-combines arbitrary ingredients.
-5. The user chooses one recipe, then receives a dish-specific preparation list and cooking steps.
+4. Every AI recipe passes a deterministic plausibility check for pantry relevance, timing, structure, and incompatible ingredient groups.
+5. If every AI route is unavailable or implausible, the endpoint ranks established recipes by pantry match and never force-combines arbitrary ingredients.
+6. The user chooses one recipe, then receives a dish-specific preparation list and cooking steps.
 
 The API key is used only on the server and is never sent to the browser.
 
@@ -98,6 +100,13 @@ worker/                   Cloudflare Worker entry point
 - Basic per-IP request limiting protects the public endpoint.
 - Pantry preferences are stored only in the visitor's browser.
 - No passwords, personal profiles, or payment data are collected.
+
+## Version 1.2.1
+
+- Displays portrait and landscape uploads without cropping the dish.
+- Added server-side plausibility validation before AI recipes reach the interface.
+- Reduced AI randomness and strengthened familiar dish-template rules.
+- Expanded pantry-anchored fallback choices for eggs, chicken, tofu, and fruit.
 
 ## Version 1.2.0
 
