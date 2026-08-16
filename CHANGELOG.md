@@ -2,6 +2,14 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.2.2 — 2026-08-15
+
+### Changed
+
+- New visitors now start with an empty ingredient field instead of five prefilled ingredients.
+- Expanded the one-tap common ingredient suggestions from four visible options to twelve.
+- Added a migration that clears only the untouched legacy default pantry while preserving customized saved ingredients.
+
 ## 1.2.1 — 2026-08-15
 
 ### Fixed

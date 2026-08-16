@@ -2,12 +2,13 @@
 
 An AI-assisted cooking companion that turns the ingredients already at home into practical meal ideas. The product is designed around a common daily problem: deciding what to cook without buying a completely new set of groceries.
 
-**Current version:** `1.2.1`
+**Current version:** `1.2.2`
 **Live demo:** [jinwan-chisha.miaochuan89.chatgpt.site](https://jinwan-chisha.miaochuan89.chatgpt.site/)
 
 ## Product highlights
 
 - Accepts free-form ingredients, including unusual but valid food combinations.
+- Starts with an empty ingredient field and offers twelve optional one-tap common ingredients.
 - Generates three recipes based on available time and cooking goal, using standard household portions.
 - Retries transient failures across two production AI models, then ranks a curated library of familiar pairings instead of inventing unusual combinations.
 - Clearly separates required ingredients from optional flavor upgrades.
@@ -100,6 +101,12 @@ worker/                   Cloudflare Worker entry point
 - Basic per-IP request limiting protects the public endpoint.
 - Pantry preferences are stored only in the visitor's browser.
 - No passwords, personal profiles, or payment data are collected.
+
+## Version 1.2.2
+
+- Removed the five prefilled ingredients so every cooking session starts clean.
+- Added twelve common ingredient shortcuts below the input.
+- Migrates the old untouched default pantry to an empty state without overwriting a customized pantry.
 
 ## Version 1.2.1
 

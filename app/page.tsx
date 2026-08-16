@@ -18,12 +18,14 @@ const RECIPES:Recipe[]=[
   {name:"菠菜鸡蛋汤面",emoji:"🍜",tone:"green",time:12,cost:2.1,protein:17,description:"清爽热乎，忙碌时也能兼顾蔬菜和蛋白质。",ingredients:makeIngredients(["面条","鸡蛋"],["菠菜","香油","胡椒"]),note:"菠菜可替换成生菜、白菜或任何绿叶菜。",steps:["水烧开后放面条，加一点盐。","面条快熟时放入绿叶菜。","沿锅边淋入蛋液，等十秒再搅动。","加酱油、胡椒和香油调味。"],source:"local"},
   {name:"一锅番茄牛肉面",emoji:"🥩",tone:"beef",time:28,cost:5.8,protein:35,description:"番茄汤底鲜亮，牛肉和主食一锅到位。",ingredients:makeIngredients(["牛肉","番茄","面条"],["洋葱","胡椒"]),note:"用牛肉末最快，牛肉片也可以。",steps:["洋葱炒软，加入牛肉炒至变色。","放番茄炒出汁，加酱油和热水。","煮十分钟后放入面条。","面条熟后尝味，加盐和胡椒。"],source:"local"},
 ];
-const DEFAULT_PANTRY=["鸡蛋","番茄","米饭","洋葱","牛奶"];
+const LEGACY_DEFAULT_PANTRY=["鸡蛋","番茄","米饭","洋葱","牛奶"];
+const SUGGESTED_INGREDIENTS=["鸡蛋","番茄","米饭","面条","鸡肉","土豆","菠菜","豆腐","蘑菇","牛肉","洋葱","西兰花"];
 const GOALS=["最快搞定","清空冰箱","高蛋白"];
 const COLORS=["tomato","egg","green","curry","pasta","beef"];
 
 export default function Home(){
-  const [pantry,setPantry]=useState(DEFAULT_PANTRY);
+  const [pantry,setPantry]=useState<string[]>([]);
+  const [pantryReady,setPantryReady]=useState(false);
   const [draft,setDraft]=useState("");
   const [minutes,setMinutes]=useState(30);
   const [goal,setGoal]=useState(GOALS[0]);
@@ -35,8 +37,8 @@ export default function Home(){
   const [step,setStep]=useState(0);
   const [checked,setChecked]=useState<string[]>([]);
 
-  useEffect(()=>{const timer=window.setTimeout(()=>{const saved=localStorage.getItem("chef-pantry")||localStorage.getItem("tonight-pantry");if(saved){try{setPantry(JSON.parse(saved))}catch{localStorage.removeItem("chef-pantry")}}},0);return()=>window.clearTimeout(timer)},[]);
-  useEffect(()=>{localStorage.setItem("chef-pantry",JSON.stringify(pantry));},[pantry]);
+  useEffect(()=>{const timer=window.setTimeout(()=>{const saved=localStorage.getItem("chef-pantry")||localStorage.getItem("tonight-pantry");if(saved){try{const parsed=JSON.parse(saved) as unknown;const items=Array.isArray(parsed)?parsed.filter((item):item is string=>typeof item==="string"):[];const isLegacyDefault=items.length===LEGACY_DEFAULT_PANTRY.length&&LEGACY_DEFAULT_PANTRY.every(item=>items.includes(item));setPantry(isLegacyDefault?[]:items)}catch{localStorage.removeItem("chef-pantry")}}setPantryReady(true)},0);return()=>window.clearTimeout(timer)},[]);
+  useEffect(()=>{if(pantryReady)localStorage.setItem("chef-pantry",JSON.stringify(pantry));},[pantry,pantryReady]);
 
   const localRanked=useMemo(()=>RECIPES.map(recipe=>{
     const names=recipe.ingredients.map(i=>i.name);
@@ -53,7 +55,7 @@ export default function Home(){
   function addItems(event:FormEvent){event.preventDefault();const items=draft.split(/[、,，\s]+/).map(x=>x.trim()).filter(Boolean);if(!items.length)return;setPantry(current=>Array.from(new Set([...current,...items])));setDraft("");}
   function normalize(raw:Recipe,index:number):Recipe{return{...raw,tone:COLORS[index%COLORS.length],source:raw.source||"ai",time:Number(raw.time)||20,cost:Number(raw.cost)||3,protein:Number(raw.protein)||15,description:raw.description||"用手边食材完成的一道新灵感。",ingredients:Array.isArray(raw.ingredients)?raw.ingredients:[],steps:Array.isArray(raw.steps)?raw.steps:[],note:raw.note||"烹饪前确认食材新鲜并彻底加热。"}}
   async function generate(){
-    if(!pantry.length){setNotice("先往冰箱里放点食材吧。");return}setLoading(true);setNotice("");setChosen(null);setChecked([]);
+    if(!pantry.length){setNotice("请先添加至少一种你现有的食材。");return}setLoading(true);setNotice("");setChosen(null);setChecked([]);
     try{const response=await fetch("/api/recommend",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pantry,minutes,goal})});const data=await response.json() as {recipes?:Recipe[];source?:"ai"|"fallback";error?:string;message?:string};if(!response.ok)throw new Error(data.message||data.error||"推荐失败");setRecipes((data.recipes||[]).map(normalize));setNotice(data.source==="fallback"?"AI 暂时没有返回结果，先按经典搭配为你筛选 3 道可靠菜谱；不会强行混合不合适的食材。":"AI 已根据你输入的食材创作了 3 道新方案。");}
     catch(error){setRecipes(localRanked);setNotice((error instanceof Error?error.message:"主厨服务暂时拥挤，请点一下再试。")+" 先为你保留经典食谱灵感。");}
     finally{setLoading(false);setTimeout(()=>document.getElementById("results")?.scrollIntoView({behavior:"smooth"}),50)}
@@ -68,7 +70,7 @@ export default function Home(){
     <header className="topbar"><button className="brand" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="返回首页顶部"><span className="brand-mark" aria-hidden="true"><span className="cloche-icon" /></span><span><b>BECOME A CHEF</b><small>COOK WITH WHAT YOU HAVE</small></span></button><div className="header-actions"><span className="weather">COOK WITH WHAT YOU HAVE</span></div></header>
     <section id="recipe-ideas" className="content">
         <div className="hero"><div><span className="eyebrow">BECOME A CHEF</span><h1>Make something<br/><em>worth serving.</em></h1><p>不需要先知道菜名。告诉我你有什么，一起把普通食材变成值得期待的一餐。</p></div><div className="hero-doodle" aria-hidden="true"><span>🍳</span><i>PLATE IT<br/>LIKE A CHEF</i></div></div>
-        <div className="planner-card"><div className="field-head"><label htmlFor="ingredients">你现在有什么食材？</label><span>{pantry.length} 种已有食材</span></div><form className="ingredient-box" onSubmit={addItems}><div className="chips">{pantry.slice(0,10).map(item=><button type="button" className="chip" key={item} onClick={()=>setPantry(pantry.filter(x=>x!==item))}>{item}<span>×</span></button>)}<input id="ingredients" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="任何食材都可以，按回车添加…"/></div><button className="add-button" aria-label="添加食材">＋</button></form><div className="quick-add"><span>试试添加</span>{["面条","鸡肉","土豆","菠菜","豆腐"].filter(x=>!pantry.includes(x)).slice(0,4).map(item=><button key={item} onClick={()=>setPantry([...pantry,item])}>＋ {item}</button>)}</div>
+        <div className="planner-card"><div className="field-head"><label htmlFor="ingredients">你现在有什么食材？</label><span>{pantry.length} 种已有食材</span></div><form className="ingredient-box" onSubmit={addItems}><div className="chips">{pantry.slice(0,10).map(item=><button type="button" className="chip" key={item} onClick={()=>setPantry(pantry.filter(x=>x!==item))}>{item}<span>×</span></button>)}<input id="ingredients" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="输入自己的食材，按回车添加…"/></div><button className="add-button" aria-label="添加食材">＋</button></form><div className="quick-add"><span>常用食材</span>{SUGGESTED_INGREDIENTS.filter(x=>!pantry.includes(x)).map(item=><button type="button" key={item} onClick={()=>setPantry(current=>Array.from(new Set([...current,item])))}>＋ {item}</button>)}</div>
           <div className="preference-grid"><div className="preference"><span className="pref-label">⏱ 可用时间</span><div className="segment">{[15,30,45].map(n=><button type="button" className={minutes===n?"active":""} onClick={()=>setMinutes(n)} key={n}>{n} 分钟</button>)}</div></div><div className="preference"><span className="pref-label">✦ 创作方向</span><div className="segment goal">{GOALS.map(x=><button type="button" className={goal===x?"active":""} onClick={()=>setGoal(x)} key={x}>{x}</button>)}</div></div></div>
           <button className="decide" disabled={loading} onClick={generate}><span>{loading?"主厨正在构思…":"给我三道创作灵感"}</span><span>{loading?"◌":"→"}</span></button>
         </div><div className="trust-row"><span>✓ 接受任意合理食材</span><span>✓ 只推荐真正能做的菜</span><span>✓ 选定后自动列出缺少食材</span></div>
