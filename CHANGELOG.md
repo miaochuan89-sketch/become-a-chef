@@ -2,6 +2,20 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.2.3 — 2026-08-21
+
+### Improved
+
+- Requires at least half of every AI recipe's core ingredients to match the visitor's pantry.
+- Rejects vague core quantities and sweet-savory combinations before display.
+- Fills incomplete AI results only with classic recipes that genuinely match the pantry.
+- Recognizes common Chinese and English ingredient aliases.
+
+### Fixed
+
+- Fallback recommendations no longer pad the result list with unrelated dishes.
+- Reduced unnecessary provider retries that could worsen congestion on the free AI channel.
+
 ## 1.2.2 — 2026-08-15
 
 ### Changed

@@ -121,3 +121,21 @@ test("fallback keeps all chicken-only suggestions anchored to chicken", async ()
     if (previousKey) process.env.GROQ_API_KEY = previousKey;
   }
 });
+
+test("fallback never pads results with recipes unrelated to the pantry", async () => {
+  const previousKey = process.env.GROQ_API_KEY;
+  delete process.env.GROQ_API_KEY;
+  try {
+    const response = await request("/api/recommend", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ pantry: ["牛肉"], minutes: 20 }),
+    });
+    const data = await response.json();
+    assert.equal(response.status, 200);
+    assert.ok(data.recipes.length > 0);
+    assert.ok(data.recipes.every((recipe) => recipe.ingredients.some((item) => item.name.includes("牛"))));
+  } finally {
+    if (previousKey) process.env.GROQ_API_KEY = previousKey;
+  }
+});

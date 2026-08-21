@@ -2,7 +2,7 @@
 
 An AI-assisted cooking companion that turns the ingredients already at home into practical meal ideas. The product is designed around a common daily problem: deciding what to cook without buying a completely new set of groceries.
 
-**Current version:** `1.2.2`
+**Current version:** `1.2.3`
 **Live demo:** [jinwan-chisha.miaochuan89.chatgpt.site](https://jinwan-chisha.miaochuan89.chatgpt.site/)
 
 ## Product highlights
@@ -10,7 +10,7 @@ An AI-assisted cooking companion that turns the ingredients already at home into
 - Accepts free-form ingredients, including unusual but valid food combinations.
 - Starts with an empty ingredient field and offers twelve optional one-tap common ingredients.
 - Generates three recipes based on available time and cooking goal, using standard household portions.
-- Retries transient failures across two production AI models, then ranks a curated library of familiar pairings instead of inventing unusual combinations.
+- Tries two production AI models, validates every result, then fills gaps only with familiar pantry-matched recipes.
 - Clearly separates required ingredients from optional flavor upgrades.
 - Reveals an actionable shopping list directly below the selected dish.
 - Supports copying the list and moving purchased ingredients into the saved pantry.
@@ -25,9 +25,9 @@ An AI-assisted cooking companion that turns the ingredients already at home into
 
 1. The user adds ingredients to the pantry.
 2. The interface sends a sanitized request to the server-side recipe endpoint.
-3. The endpoint asks Groq-hosted production models for structured recipe data and follows provider retry timing for temporary failures.
-4. Every AI recipe passes a deterministic plausibility check for pantry relevance, timing, structure, and incompatible ingredient groups.
-5. If every AI route is unavailable or implausible, the endpoint ranks established recipes by pantry match and never force-combines arbitrary ingredients.
+3. The endpoint asks Groq-hosted production models for structured recipe data.
+4. Every AI recipe passes deterministic checks for pantry coverage, exact core quantities, timing, structure, and incompatible ingredient groups.
+5. Rejected or missing AI recipes are replaced only by established recipes with a real pantry match; unrelated dishes are never added just to reach three results.
 6. The user chooses one recipe, then receives a dish-specific preparation list and cooking steps.
 
 The API key is used only on the server and is never sent to the browser.
@@ -101,6 +101,13 @@ worker/                   Cloudflare Worker entry point
 - Basic per-IP request limiting protects the public endpoint.
 - Pantry preferences are stored only in the visitor's browser.
 - No passwords, personal profiles, or payment data are collected.
+
+## Version 1.2.3
+
+- Strengthened pantry coverage and exact-quantity checks for every AI recipe.
+- Added common Chinese and English ingredient alias matching.
+- Replaces rejected AI results only with genuinely pantry-matched classic recipes.
+- Prevents unrelated fallback dishes from being added just to fill the result count.
 
 ## Version 1.2.2
 

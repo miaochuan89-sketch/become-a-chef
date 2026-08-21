@@ -213,8 +213,9 @@ export function buildPantryFallback(pantry: string[], minutes: number, goal: str
       if (matched === 0) score -= 30;
       if (goal === "清空冰箱") score += matched * 5;
       if (goal === "高蛋白") score += recipe.protein / 5;
-      return { recipe, score };
+      return { recipe, score, matched };
     })
+    .filter(({ matched }) => matched > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map(({ recipe }) => {
