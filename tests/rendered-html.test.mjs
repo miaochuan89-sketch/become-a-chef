@@ -139,3 +139,13 @@ test("fallback never pads results with recipes unrelated to the pantry", async (
     if (previousKey) process.env.GROQ_API_KEY = previousKey;
   }
 });
+
+test("notification email is optional and never exposed by the public feed", async () => {
+  const feed = await readFile(new URL("../app/community-feed.tsx", import.meta.url), "utf8");
+  const postsRoute = await readFile(new URL("../app/api/posts/route.ts", import.meta.url), "utf8");
+  assert.match(feed, /NOTIFICATION EMAIL · OPTIONAL/);
+  assert.match(feed, /不会公开/);
+  const publicPostQuery = postsRoute.match(/SELECT id, author, caption, recipe_name, likes, created_at FROM posts/)?.[0] ?? "";
+  assert.ok(publicPostQuery);
+  assert.doesNotMatch(publicPostQuery, /notification_email|notification_token/);
+});

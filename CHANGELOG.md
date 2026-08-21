@@ -2,6 +2,21 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.3.0 — 2026-08-21
+
+### Added
+
+- Optional private notification email when publishing a dish.
+- One-click email confirmation without creating an account or password.
+- Immediate email notifications for new comments.
+- Aggregated like notifications at 1, 5, 10, 25, 50, and each 100-like milestone.
+- One-click unsubscribe link in every activity notification.
+
+### Privacy
+
+- Notification addresses and tokens are omitted from the public feed API.
+- Existing posts remain unchanged and notifications are opt-in.
+
 ## 1.2.3 — 2026-08-21
 
 ### Improved
