@@ -2,6 +2,18 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.3.1 — 2026-08-22
+
+### Removed
+
+- Removed the optional email-notification experiment and all related public UI and API routes.
+
+### Improved
+
+- AI recipes may now miss at most one core ingredient.
+- Added validation against multiple main proteins, conflicting staple systems, and unused core ingredients.
+- Pantry aliases are rewritten to the visitor's exact ingredient wording for more accurate match and shopping-list results.
+
 ## 1.3.0 — 2026-08-21
 
 ### Added

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureCommunitySchema, getDb, getUploads } from "../../../db";
-import { newNotificationToken, notificationsConfigured, sendVerification, validEmail } from "../notifications/email";
 
 type PostRow = { id:string; author:string; caption:string; recipe_name:string|null; likes:number; created_at:number };
 type CommentRow = { id:string; post_id:string; author:string; body:string; created_at:number };
@@ -39,11 +38,8 @@ export async function POST(request:NextRequest) {
   const author = String(form.get("author") || "").trim().slice(0, 32);
   const caption = String(form.get("caption") || "").trim().slice(0, 140);
   const recipeName = String(form.get("recipeName") || "").trim().slice(0, 80) || null;
-  const notificationEmail = String(form.get("notificationEmail") || "").trim().toLowerCase();
   const image = form.get("image");
   if (!author || !caption) return NextResponse.json({ error:"请填写发布者名称和一句话。" }, { status:400 });
-  if (notificationEmail && !validEmail(notificationEmail)) return NextResponse.json({ error:"请输入有效的通知邮箱。" }, { status:400 });
-  if (notificationEmail && !notificationsConfigured()) return NextResponse.json({ error:"邮件通知暂时未启用，请先不填写邮箱。" }, { status:503 });
   if (!(image instanceof File) || !allowedTypes.has(image.type) || image.size === 0 || image.size > 5 * 1024 * 1024) {
     return NextResponse.json({ error:"请选择不超过 5MB 的 JPG、PNG 或 WebP 图片。" }, { status:400 });
   }
@@ -51,16 +47,14 @@ export async function POST(request:NextRequest) {
   const id = crypto.randomUUID();
   const extension = image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg";
   const imageKey = `dish-posts/${id}.${extension}`;
-  const notificationToken = notificationEmail ? newNotificationToken() : null;
   await getUploads().put(imageKey, await image.arrayBuffer(), { httpMetadata:{ contentType:image.type } });
   try {
-    await getDb().prepare("INSERT INTO posts (id, author, caption, recipe_name, image_key, image_type, likes, notification_email, notification_token, notification_verified, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?)")
-      .bind(id, author, caption, recipeName, imageKey, image.type, notificationEmail || null, notificationToken, Date.now()).run();
+    await getDb().prepare("INSERT INTO posts (id, author, caption, recipe_name, image_key, image_type, likes, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)")
+      .bind(id, author, caption, recipeName, imageKey, image.type, Date.now()).run();
   } catch (error) {
     await getUploads().delete(imageKey);
     throw error;
   }
   postWindows.set(ip, Date.now());
-  const verificationSent = notificationEmail && notificationToken ? await sendVerification(notificationEmail, id, notificationToken).catch(() => false) : false;
-  return NextResponse.json({ id, notificationRequested:Boolean(notificationEmail), verificationSent }, { status:201 });
+  return NextResponse.json({ id }, { status:201 });
 }

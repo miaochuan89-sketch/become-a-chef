@@ -28,9 +28,6 @@ export function ensureCommunitySchema() {
         image_key TEXT NOT NULL UNIQUE,
         image_type TEXT NOT NULL,
         likes INTEGER NOT NULL DEFAULT 0,
-        notification_email TEXT,
-        notification_token TEXT,
-        notification_verified INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL
       )`),
       db.prepare(`CREATE TABLE IF NOT EXISTS comments (

@@ -2,7 +2,7 @@
 
 An AI-assisted cooking companion that turns the ingredients already at home into practical meal ideas. The product is designed around a common daily problem: deciding what to cook without buying a completely new set of groceries.
 
-**Current version:** `1.3.0`
+**Current version:** `1.3.1`
 **Live demo:** [jinwan-chisha.miaochuan89.chatgpt.site](https://jinwan-chisha.miaochuan89.chatgpt.site/)
 
 ## Product highlights
@@ -15,7 +15,6 @@ An AI-assisted cooking companion that turns the ingredients already at home into
 - Reveals an actionable shopping list directly below the selected dish.
 - Supports copying the list and moving purchased ingredients into the saved pantry.
 - Includes an account-free Chef's Table for photo posts, likes, and named comments.
-- Offers optional verified email notifications for comments and like milestones without creating an account.
 - Preserves the full composition of both portrait and landscape dish photos.
 - Keeps Recipe Ideas and Chef's Table visible in a persistent two-tab page directory.
 - Provides step-by-step cooking mode with practical substitutions and safety notes.
@@ -51,7 +50,6 @@ The API key is used only on the server and is never sent to the browser.
 
 - Node.js `>=22.13.0`
 - A Groq API key for live AI recommendations
-- A Postmark server token and confirmed sender address for optional email notifications
 
 ### Setup
 
@@ -64,8 +62,6 @@ Add your key to `.env.local`:
 
 ```env
 GROQ_API_KEY=your_key_here
-POSTMARK_SERVER_TOKEN=your_token_here
-POSTMARK_FROM_EMAIL=your_confirmed_sender@example.com
 ```
 
 Then start the development server:
@@ -105,13 +101,13 @@ worker/                   Cloudflare Worker entry point
 - Basic per-IP request limiting protects the public endpoint.
 - Pantry preferences are stored only in the visitor's browser.
 - No passwords, personal profiles, or payment data are collected.
-- Optional notification emails are private, never returned by the public feed, and can be disabled from any notification.
+## Version 1.3.1
 
-## Version 1.3.0
-
-- Added optional private notification email during dish publishing.
-- Added password-free email confirmation, comment alerts, like milestones, and unsubscribe links.
-- Kept notification addresses and tokens out of all public post responses.
+- Removed the experimental email-notification flow from Chef's Table.
+- Tightened AI recipe validation to allow at most one missing core ingredient.
+- Rejects recipes that mix multiple main proteins or staple systems without a reliable cooking basis.
+- Verifies that every core ingredient is actually used in the cooking steps.
+- Aligns AI ingredient names with the visitor's own pantry wording so match and shopping-list labels stay accurate.
 
 ## Version 1.2.3
 

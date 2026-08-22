@@ -140,12 +140,19 @@ test("fallback never pads results with recipes unrelated to the pantry", async (
   }
 });
 
-test("notification email is optional and never exposed by the public feed", async () => {
+test("email notifications are removed from the community feed", async () => {
   const feed = await readFile(new URL("../app/community-feed.tsx", import.meta.url), "utf8");
   const postsRoute = await readFile(new URL("../app/api/posts/route.ts", import.meta.url), "utf8");
-  assert.match(feed, /NOTIFICATION EMAIL · OPTIONAL/);
-  assert.match(feed, /不会公开/);
-  const publicPostQuery = postsRoute.match(/SELECT id, author, caption, recipe_name, likes, created_at FROM posts/)?.[0] ?? "";
-  assert.ok(publicPostQuery);
-  assert.doesNotMatch(publicPostQuery, /notification_email|notification_token/);
+  assert.doesNotMatch(feed, /NOTIFICATION EMAIL|notificationEmail|notifications\/status/);
+  assert.doesNotMatch(postsRoute, /notification_email|notification_token|sendVerification/);
+});
+
+test("AI recipes use stricter kitchen-logic validation", async () => {
+  const route = await readFile(new URL("../app/api/recommend/route.ts", import.meta.url), "utf8");
+  assert.match(route, /missingRequired > 1/);
+  assert.match(route, /ingredientAppearsInSteps/);
+  assert.match(route, /mainProteinGroups/);
+  assert.match(route, /stapleGroups/);
+  assert.match(route, /pantryAlignedIngredients/);
+  assert.match(route, /\.sort\(\(a, b\).*pantryMatch/);
 });
