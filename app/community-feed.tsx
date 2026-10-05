@@ -8,6 +8,10 @@ type CommunityPost = { id:string; author:string; caption:string; recipeName:stri
 
 export default function CommunityFeed({ recipeName }:{ recipeName?:string }) {
   const [posts,setPosts]=useState<CommunityPost[]>([]);
+  const [total,setTotal]=useState(0);
+  const [nextCursor,setNextCursor]=useState<string|null>(null);
+  const [loadingPosts,setLoadingPosts]=useState(true);
+  const [feedError,setFeedError]=useState("");
   const [author,setAuthor]=useState("");
   const [caption,setCaption]=useState("");
   const [image,setImage]=useState<File|null>(null);
@@ -19,7 +23,18 @@ export default function CommunityFeed({ recipeName }:{ recipeName?:string }) {
   const fileRef=useRef<HTMLInputElement>(null);
   const preview=useMemo(()=>image?URL.createObjectURL(image):"",[image]);
 
-  async function loadPosts(){try{const response=await fetch("/api/posts");const data=await response.json() as {posts?:CommunityPost[]};if(response.ok)setPosts(data.posts||[])}catch{setStatus("Chef’s Table 暂时无法加载。")}}
+  async function loadPosts(cursor?:string){
+    setLoadingPosts(true);setFeedError("");
+    try{
+      const response=await fetch(cursor?`/api/posts?before=${encodeURIComponent(cursor)}`:"/api/posts",{cache:"no-store"});
+      const data=await response.json() as {posts?:CommunityPost[];total?:number;nextCursor?:string|null;error?:string};
+      if(!response.ok||!Array.isArray(data.posts))throw new Error(data.error||"作品暂时无法加载，请稍后重试。");
+      const page=data.posts;
+      setPosts(current=>cursor?[...current,...page.filter(post=>!current.some(existing=>existing.id===post.id))]:page);
+      setTotal(data.total??page.length);setNextCursor(data.nextCursor??null);
+    }catch(error){setFeedError(error instanceof Error?error.message:"作品暂时无法加载，请稍后重试。")}
+    finally{setLoadingPosts(false)}
+  }
   useEffect(()=>{const timer=window.setTimeout(()=>{void loadPosts()},0);return()=>window.clearTimeout(timer)},[]);
   useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview)},[preview]);
 
@@ -28,7 +43,7 @@ export default function CommunityFeed({ recipeName }:{ recipeName?:string }) {
   async function comment(event:FormEvent,postId:string){event.preventDefault();try{const response=await fetch(`/api/posts/${postId}/comments`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({author:commentAuthor,body:commentBody})});const data=await response.json() as {comment?:Comment;error?:string};if(!response.ok||!data.comment)throw new Error(data.error||"评论失败");setPosts(current=>current.map(post=>post.id===postId?{...post,comments:[...post.comments,data.comment!]}:post));setCommentAuthor("");setCommentBody("");setCommenting(null)}catch(error){setStatus(error instanceof Error?error.message:"评论失败。")}}
 
   return <section id="chefs-table" className="community-section">
-    <div className="community-heading"><div><span className="eyebrow">CHEF&apos;S TABLE</span><h2>把这一餐留下来</h2><p>一张照片、你的名称和一句话。无需注册。</p></div><span className="community-count">{posts.length} DISHES</span></div>
+    <div className="community-heading"><div><span className="eyebrow">CHEF&apos;S TABLE</span><h2>把这一餐留下来</h2><p>一张照片、你的名称和一句话。无需注册。</p></div><span className="community-count">{total} DISHES</span></div>
     <div className="community-layout">
       <form className="post-composer" onSubmit={publish}>
         <div className={`photo-drop ${preview?"has-photo":""}`}>
@@ -42,15 +57,20 @@ export default function CommunityFeed({ recipeName }:{ recipeName?:string }) {
         {status&&<p className="community-status">{status}</p>}
       </form>
       <div className="post-grid">
-        {!posts.length&&<div className="community-empty"><span>🍽️</span><h3>The table is ready.</h3><p>Be the first person to share what you made.</p></div>}
+        {!posts.length&&!loadingPosts&&!feedError&&<div className="community-empty"><span>🍽️</span><h3>The table is ready.</h3><p>Be the first person to share what you made.</p></div>}
+        {!posts.length&&loadingPosts&&<p role="status">正在加载作品…</p>}
         {posts.map(post=><article className="dish-post" key={post.id}>
-          <img src={post.imageUrl} alt={`${post.author} 分享的菜品`}/>
+          <img src={post.imageUrl} alt={`${post.author} 分享的菜品`} loading="lazy"/>
           <div className="dish-post-body"><div className="post-meta"><b>{post.author}</b><time>{new Date(post.createdAt).toLocaleDateString("zh-CN")}</time></div><p>{post.caption}</p>{post.recipeName&&<small>Made from · {post.recipeName}</small>}
             <div className="post-actions"><button onClick={()=>like(post.id)} aria-label={`为 ${post.author} 的菜点赞`}>♥ <span>{post.likes}</span></button><button onClick={()=>setCommenting(commenting===post.id?null:post.id)}>COMMENT <span>{post.comments.length}</span></button></div>
             {!!post.comments.length&&<div className="comments">{post.comments.map(item=><p key={item.id}><b>{item.author}</b>{item.body}</p>)}</div>}
             {commenting===post.id&&<form className="comment-form" onSubmit={event=>comment(event,post.id)}><input value={commentAuthor} onChange={event=>setCommentAuthor(event.target.value)} maxLength={32} placeholder="Your name" aria-label="评论者名称" required/><input value={commentBody} onChange={event=>setCommentBody(event.target.value)} maxLength={180} placeholder="Write a comment…" aria-label="评论内容" required/><button>POST</button></form>}
           </div>
         </article>)}
+        {(nextCursor||feedError)&&<div className="feed-pagination">
+          <p role="status">{feedError||`已显示 ${posts.length} / ${total} 件作品`}</p>
+          <button type="button" disabled={loadingPosts} onClick={()=>void loadPosts(nextCursor??undefined)}>{loadingPosts?"正在加载…":feedError?"重试加载":"加载更早的作品"}</button>
+        </div>}
       </div>
     </div>
   </section>

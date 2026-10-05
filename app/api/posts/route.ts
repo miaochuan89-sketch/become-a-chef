@@ -6,18 +6,30 @@ type CommentRow = { id:string; post_id:string; author:string; body:string; creat
 const postWindows = new Map<string, number>();
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-export async function GET() {
+export async function GET(request:NextRequest) {
+  const cursor = new URL(request.url).searchParams.get("before");
+  const match = cursor?.match(/^(\d{1,16}):([0-9a-f-]{36})$/i);
+  if (cursor !== null && (!match || !Number.isSafeInteger(Number(match[1])))) {
+    return NextResponse.json({ error:"作品分页无效，请刷新后重试。" }, { status:400 });
+  }
+  try {
   await ensureCommunitySchema();
   const db = getDb();
-  const posts = await db.prepare("SELECT id, author, caption, recipe_name, likes, created_at FROM posts ORDER BY created_at DESC LIMIT 24").all<PostRow>();
-  const ids = posts.results.map(post => post.id);
+  const query = "SELECT id, author, caption, recipe_name, likes, created_at FROM posts";
+  const posts = await (match
+    ? db.prepare(`${query} WHERE (created_at, id) < (?, ?) ORDER BY created_at DESC, id DESC LIMIT 25`).bind(Number(match[1]), match[2])
+    : db.prepare(`${query} ORDER BY created_at DESC, id DESC LIMIT 25`)).all<PostRow>();
+  const page = posts.results.slice(0, 24);
+  const last = page.at(-1);
+  const count = await db.prepare("SELECT COUNT(*) AS total FROM posts").first<{ total:number }>();
+  const ids = page.map(post => post.id);
   let comments:CommentRow[] = [];
   if (ids.length) {
     const placeholders = ids.map(() => "?").join(",");
     const result = await db.prepare(`SELECT id, post_id, author, body, created_at FROM comments WHERE post_id IN (${placeholders}) ORDER BY created_at ASC`).bind(...ids).all<CommentRow>();
     comments = result.results;
   }
-  return NextResponse.json({ posts: posts.results.map(post => ({
+  return NextResponse.json({ total:count?.total ?? 0, nextCursor:posts.results.length > 24 && last ? `${last.created_at}:${last.id}` : null, posts: page.map(post => ({
     id:post.id,
     author:post.author,
     caption:post.caption,
@@ -26,7 +38,11 @@ export async function GET() {
     createdAt:post.created_at,
     imageUrl:`/api/posts/${post.id}/image`,
     comments:comments.filter(comment => comment.post_id === post.id).map(comment => ({ id:comment.id, author:comment.author, body:comment.body, createdAt:comment.created_at })),
-  })) });
+  })) }, { headers:{ "Cache-Control":"no-store" } });
+  } catch (error) {
+    console.error("Community feed unavailable", error);
+    return NextResponse.json({ error:"作品暂时无法加载，请稍后重试。" }, { status:503 });
+  }
 }
 
 export async function POST(request:NextRequest) {

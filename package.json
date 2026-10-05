@@ -10,7 +10,7 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "pnpm build && node --test tests/rendered-html.test.mjs",
+    "test": "pnpm build && node --test tests/rendered-html.test.mjs tests/community-pagination.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext --ignore-pattern .wrangler --ignore-pattern work --ignore-pattern outputs"
   },
   "dependencies": {
