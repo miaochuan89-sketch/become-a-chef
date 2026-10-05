@@ -2,6 +2,27 @@
 
 All notable changes to BECOME A CHEF are documented here.
 
+## 1.3.1 maintenance — 2026-10-04
+
+### Fixed
+
+- Older Chef's Table posts no longer become inaccessible when the feed exceeds 24 entries. The previous query returned only the newest 24 posts and the interface offered no way to retrieve the rest.
+- Failed feed requests now show an error and a retry action rather than appearing as an empty community feed. Already loaded posts remain visible when loading an older page fails.
+
+### Added
+
+- A **加载更早的作品** (Load older works) button with 24-post pages and a total dish count.
+- Cursor-based pagination ordered by publication time and post ID, preventing duplicate or skipped history entries when timestamps match or new posts arrive between requests.
+- Lazy loading for feed photos and explicit loading states.
+- A SQLite-backed regression test covering multi-page history, tied timestamps, concurrent new uploads, older-post comments, empty final pages, invalid cursors, and unavailable storage.
+
+### Validation
+
+- Production build completed; all 10 automated checks passed.
+- After deployment, all 45 existing posts were retrieved across two pages without duplicate IDs. The oldest post was dated August 16, 2026, and its photo returned successfully.
+- The display limit was the cause of the missing history; this fix did not require deleting, migrating, or re-uploading existing photos.
+- The package version remains `1.3.1`; this entry records the deployed maintenance fix separately from the original release.
+
 ## 1.3.1 — 2026-08-22
 
 ### Removed
